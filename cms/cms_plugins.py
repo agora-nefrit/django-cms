@@ -4,13 +4,11 @@ from cms.models.aliaspluginmodel import AliasPluginModel
 from cms.models.placeholderpluginmodel import PlaceholderReference
 from cms.plugin_base import CMSPluginBase, PluginMenuItem
 from cms.plugin_pool import plugin_pool
-from cms.plugin_rendering import render_placeholder
 from cms.utils.urlutils import admin_reverse
 from django.conf.urls import url
 from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse
 from django.middleware.csrf import get_token
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _, get_language
+from django.utils.translation import ugettext, ugettext_lazy as _, get_language
 
 
 class PlaceholderPlugin(CMSPluginBase):
@@ -33,22 +31,6 @@ class AliasPlugin(CMSPluginBase):
     model = AliasPluginModel
     render_template = "cms/plugins/alias.html"
     system = True
-
-    def render(self, context, instance, placeholder):
-        from cms.utils.plugins import downcast_plugins, build_plugin_tree
-        context['instance'] = instance
-        context['placeholder'] = placeholder
-        if instance.plugin_id:
-            plugins = instance.plugin.get_descendants().order_by('placeholder', 'path')
-            plugins = [instance.plugin] + list(plugins)
-            plugins = downcast_plugins(plugins)
-            plugins[0].parent_id = None
-            plugins = build_plugin_tree(plugins)
-            context['plugins'] = plugins
-        if instance.alias_placeholder_id:
-            content = render_placeholder(instance.alias_placeholder, context)
-            context['content'] = mark_safe(content)
-        return context
 
     def get_extra_global_plugin_menu_items(self, request, plugin):
         return [
